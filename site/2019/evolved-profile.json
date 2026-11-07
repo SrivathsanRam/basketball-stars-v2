@@ -1,0 +1,62 @@
+{
+  "name": "Evolved 2019 bot — step-backs, steals, blocks and threes",
+  "generation": 2,
+  "trainer": "tactical-release-audit-v5",
+  "trainedAt": "2026-11-07T07:45:19.864Z",
+  "parameters": {
+    "accuracy": 0,
+    "chanceToCompleteDunk": 1,
+    "jumpBall": 0,
+    "chanceToRebound": 1,
+    "attack": 0.01,
+    "attackAtOnce": 1,
+    "avoidSteal": 1,
+    "makePump": 0.5,
+    "reactOnOpponent": 1,
+    "makeDash": 1,
+    "delayDash": 0.25,
+    "defence": 0.01,
+    "jumpThrow": 1,
+    "makeSteal": 1,
+    "delaySteal": 0,
+    "jumpPump": 0,
+    "makeBlock": 1,
+    "reboundFixed": 0,
+    "reboundRange": 0,
+    "moveDelay": 0,
+    "coolDown": 12
+  },
+  "tactics": {
+    "threePointChance": 0.8,
+    "longThreeOffset": 17.497,
+    "stepBackTriggerRange": 110.07,
+    "stepBackChance": 0.559,
+    "stepBackDuration": 0.185,
+    "stepBackReleaseDelay": 0.027,
+    "defenseGap": 28,
+    "stealRange": 92,
+    "blockRange": 210,
+    "reboundRange": 82,
+    "reboundHeight": 55,
+    "reboundLead": 0.109,
+    "dunkDashDistance": 279.583,
+    "dunkLaunchDistance": 156.864,
+    "dashPressureRange": 115
+  },
+  "validationAgainstPreviousChampion": {
+    "fitness": 0.375,
+    "meanDifferential": 0.3333333333333333,
+    "winRate": 0.3333333333333333,
+    "drawRate": 0.4166666666666667,
+    "lossRate": 0.25,
+    "matches": 24
+  },
+  "evaluationAgainstStrongestNative": {
+    "fitness": 0.475,
+    "meanDifferential": 0.375,
+    "winRate": 0.45,
+    "drawRate": 0.3,
+    "lossRate": 0.25,
+    "matches": 40
+  }
+}

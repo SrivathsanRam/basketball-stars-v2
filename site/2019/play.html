@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no">
+    <title>Play the evolved Basketball Stars 2019 bot</title>
+    <link rel="stylesheet" href="../vendor-2019/assets/css/app.css">
+    <link rel="stylesheet" href="../trainer.css">
+    <style>
+      #content { visibility: hidden; }
+      body.evolved-match #content { visibility: visible; }
+      #play-panel { width: 220px; }
+    </style>
+  </head>
+  <body>
+    <div id="content"></div>
+    <div id="loader">Loading evolved 2019 opponent…</div>
+    <aside id="play-panel">
+      <strong>Basketball Stars · Evolved</strong>
+      <span id="profile-name">Loading profile…</span>
+      <button id="play-evolved" disabled>Play</button>
+      <small>You control the player on the left.</small>
+      <small>Arrows / WASD move &amp; jump · X shoot/steal · Z special. Double-tap left/right to dash.</small>
+    </aside>
+    <div id="trainer-status" role="status">Initializing 2019 engine…</div>
+
+    <script src="./crazygames-stub.js"></script>
+    <script src="../vendor-2019/assets/lib/nape.min.js"></script>
+    <script src="../vendor-2019/assets/lib/phaser.min.js"></script>
+    <script src="../vendor-2019/assets/lib/phaser-cachebuster.min.js"></script>
+    <script src="../vendor-2019/assets/lib/phaser-super-storage.min.js"></script>
+    <script src="../vendor-2019/assets/lib/dragonBones.min.js"></script>
+    <script src="../vendor-2019/basketball_legends_2019.patched.min.js"></script>
+    <script src="./training-bridge.js"></script>
+    <script src="./play.js"></script>
+  </body>
+</html>

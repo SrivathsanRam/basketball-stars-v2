@@ -1,0 +1,22 @@
+{
+  "auditedAt": "2026-11-07T07:45:19.865Z",
+  "duration": 18,
+  "previousChampion": {
+    "fitness": 0.375,
+    "meanDifferential": 0.3333333333333333,
+    "winRate": 0.3333333333333333,
+    "drawRate": 0.4166666666666667,
+    "lossRate": 0.25,
+    "matches": 24
+  },
+  "selectedNativeAudit": {
+    "fitness": 0.475,
+    "meanDifferential": 0.375,
+    "winRate": 0.45,
+    "drawRate": 0.3,
+    "lossRate": 0.25,
+    "matches": 40
+  },
+  "promoted": true,
+  "selectedProfile": "Evolved 2019 bot — step-backs, steals, blocks and threes"
+}
