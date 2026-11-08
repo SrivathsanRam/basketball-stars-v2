@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no">
     <title>Play the evolved Basketball Stars 2019 bot</title>
-    <link rel="stylesheet" href="../vendor-2019/assets/css/app.css">
-    <link rel="stylesheet" href="../trainer.css">
+    <link rel="stylesheet" href="../vendor-2019/assets/css/app.css?v=ad8abcc6a736">
+    <link rel="stylesheet" href="../trainer.css?v=9d4cfca1bbfe">
     <style>
       #content { visibility: hidden; }
       body.evolved-match #content { visibility: visible; }
@@ -23,6 +23,19 @@
       <small>Ultimate recharge: 18 seconds for both players.</small>
       <small>Arrows / WASD move &amp; jump · X shoot/steal · Z special. Double-tap left/right to dash.</small>
     </aside>
+    <section id="match-result" role="dialog" aria-modal="true" aria-labelledby="result-title" hidden>
+      <div class="result-card">
+        <p class="result-caption">FINAL SCORE</p>
+        <h1 id="result-title">Full time</h1>
+        <div class="result-scoreboard">
+          <div><span>You</span><strong id="result-you">0</strong></div>
+          <span class="result-separator">–</span>
+          <div><span>Evolved bot</span><strong id="result-bot">0</strong></div>
+        </div>
+        <button id="play-again">Play again</button>
+        <p>Same evolved opponent · Equal 18-second ultimates</p>
+      </div>
+    </section>
     <div id="trainer-status" role="status">Initializing 2019 engine…</div>
 
     <script src="./crazygames-stub.js?v=3e22af72486f"></script>
@@ -32,8 +45,9 @@
     <script src="../vendor-2019/assets/lib/phaser-super-storage.min.js?v=1c4dba377a10"></script>
     <script src="../vendor-2019/assets/lib/dragonBones.min.js?v=82fd9eb27fc1"></script>
     <script src="../vendor-2019/basketball_legends_2019.patched.min.js?v=e588047ce821"></script>
-    <script src="./shot-policy.js?v=ee63520692ce"></script>
-    <script src="./training-bridge.js?v=9a90a43b5696"></script>
-    <script src="./play.js?v=3b0d3041fbea"></script>
+    <script src="./duel-policy.js?v=b08a9d598844"></script>
+    <script src="./shot-policy.js?v=5e4bc4f6e418"></script>
+    <script src="./training-bridge.js?v=5a29168d0172"></script>
+    <script src="./play.js?v=adf89e7ef607"></script>
   </body>
 </html>

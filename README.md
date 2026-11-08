@@ -16,24 +16,33 @@ brakes and releases high enough to avoid the game's low-release accuracy penalty
 Short step-backs are limited to 18 pixels and never use a backward dash. Shot
 physics, random dispersion and the game's three-point scoring rules are unchanged.
 
+The current version leads visible forward movement to contest jump shots, keeps
+the jump available instead of wasting distant steal animations, and checks the
+defender's blocking lane before a release. Against a close guard it can pump fake,
+change direction in short bursts, wait for the defender to commit, or drive
+instead of forcing a covered three. These decisions use positions and visible
+motion, not the human player's key presses.
+
+At full time a persistent final-score card shows both scores and the winner.
+**Play again** starts a new match against the same selected evolved opponent.
+
 Both players have the same **18-second ultimate recharge**. Cooldown is enforced
 as a shared match rule and cannot be reduced by an evolved bot profile. The
 previous bot's 12-second cooldown advantage has been removed.
 
 The selected model lives in `site/2019/evolved-profile.json`. Its saved evaluation
 and `site/2019/release-audit.json` record the match evidence used for selection.
-Current validation uses completed 30-second regulation games with swapped court
-sides, equal ultimate cooldowns, and measured three-point attempts/makes. Earlier
-audit figures were produced by an evaluator that could cap games early and are
-superseded. The corrected evaluator advances the engine and character animations
-together; regular human play retains the game's original timing.
+Three variants were screened on 30-second games, then the leader played 24 fresh,
+completed 40-second games with court sides swapped. It won 23 and lost 1,
+averaging +3.042 points against the previous release. It recorded 7 blocks, had
+zero shots blocked, and was dispossessed 2 times versus 46 for the previous bot.
+Both used the same 18-second ultimate recharge; no early activation was recorded.
 
-On 24 fresh, completed games against the previous controller (also using the fair
-18-second cooldown), this release won 15 and lost 9, averaging +1.417 points. It
-made 18 of 19 recorded threes, compared with the old controller's 0 of 26. No deep
-releases or early ultimates were recorded for the new bot. This is a small match
-sample rather than a guaranteed shooting percentage. A separate controlled drill
-produced 68 made threes in 80 attempts for its forward-jump release.
+In a separate 36-possession scripted reactive-blocker drill, the selected version
+had zero shots blocked versus 12 for the previous release. The controlled jumper
+drills and bot matches are repeatable test scenarios, not guarantees against all
+human play. The evaluator advances the engine and animations together and rejects
+capped final-audit games; normal human play retains the original timing.
 The training method is an evolution strategy over the game's parameters and
 tactical decisions, rather than a neural RL network.
 

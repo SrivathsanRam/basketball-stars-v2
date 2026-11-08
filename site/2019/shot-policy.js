@@ -35,6 +35,22 @@
     controller.currentDash = 0;
     controller.currentBlockOrPump = false;
 
+    const duel = tactics.contestAwareness ? root.__BS2019_DUEL__ : null;
+    if (duel && player.isGrounded && !player.isBlockedOrPump && /steal/.test(controller.opponent.state || "") &&
+      Math.abs(player.getX() - controller.opponent.getX()) < 85) {
+      // A committed steal cannot block a jump at the same time. Protect the
+      // possession instead of letting a hesitation/drive lock out the jump.
+      plan.phase = "jump";
+    }
+    if (duel && plan.phase === "hesitate" && duel.hesitation(controller, plan, tactics, delta, arc, distance)) return true;
+    if (plan.phase === "drive") {
+      plan.driveLeft -= delta;
+      controller.currentMove = -side;
+      if (player.readyForDash) controller.currentDash = -side;
+      if (plan.driveLeft <= 0) reset(controller);
+      return true;
+    }
+
     if (plan.phase === "approach") {
       if (distance < arc - 130) {
         reset(controller);
@@ -70,6 +86,10 @@
     if (plan.phase === "jump") {
       controller.currentMove = 2;
       if (player.isGrounded) {
+        if (duel && duel.blockThreat(controller, tactics)) {
+          duel.startFeint(controller, plan, tactics, distance);
+          return true;
+        }
         controller.currentJump = true;
         plan.takeoff = distance;
         return true;
@@ -89,7 +109,14 @@
         controller.currentMove = 2;
         // The native jump apex is around y=252. A lower target is unreachable.
         const highEnough = player.getY() <= Math.max(260, tactics.threeReleaseHeight);
-        if (highEnough && player.canThrow) controller.currentAction = true;
+        if (duel && duel.blockThreat(controller, tactics)) {
+          if (!plan.waitedForBlock) duel.note(controller, "contestDeferrals");
+          plan.waitedForBlock = true;
+          const away = Math.sign(player.getX() - controller.opponent.getX());
+          controller.currentMove = distance < arc + 55 ? away : -side;
+        } else if ((highEnough || (plan.waitedForBlock && player.getY() < 335)) && player.canThrow) {
+          controller.currentAction = true;
+        }
       }
       return true;
     }

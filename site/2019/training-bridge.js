@@ -10,8 +10,18 @@
   let simulationAccumulator = 0;
   let animationClock = null;
   let originalAnimationAdvance = null;
+  let humanMode = false;
+  let lastHumanResult = null;
   const SHARED_ULTIMATE_COOLDOWN = 18;
   const tacticalDefaults = Object.freeze({
+    predictiveDefense: 0,
+    contestAwareness: 0,
+    blockReactDelay: 0.025,
+    blockLead: 0.12,
+    contestRange: 120,
+    shotRiskRange: 105,
+    jitterPeriod: 0.1,
+    feintWait: 0.25,
     threeShotMode: 0,
     threeTakeoffDistance: 535,
     threeReleaseHeight: 280,
@@ -127,7 +137,9 @@
     const distance = Math.abs(playerX - opponentX);
     const side = controller.SIDE;
     const delta = Number(controller.__tacticalDelta) || 0.025;
+    controller.__decisionStats = matchMechanics[side];
     if (!player.withBall) window.__BS2019_SHOTS__.reset(controller);
+    else controller.__duelDefense = null;
     if (Number.isFinite(tactics.threePointChance)) {
       controller.chanceForThree = Math.max(0, Math.min(1, tactics.threePointChance));
     }
@@ -163,6 +175,8 @@
         return;
       }
     }
+
+    if (tactics.predictiveDefense && !player.withBall && window.__BS2019_DUEL__.defend(controller, tactics, delta)) return;
 
     if (opponent.withBall) {
       controller.__stepBackConsidered = false;
@@ -201,6 +215,13 @@
     }
 
     const basketDistance = side === 1 ? playerX : controller.width - playerX;
+    if (tactics.contestAwareness && !controller.__plannedThree && basketDistance >= 500 &&
+      (controller.currentJump || controller.currentAction) && window.__BS2019_DUEL__.blockThreat(controller, tactics)) {
+      controller.__plannedThree = true;
+      controller.__threePlan = player.isGrounded ? null : {
+        phase: "rise", elapsed: 0, takeoff: side === 1 ? player.pointOfThrow : controller.width - player.pointOfThrow
+      };
+    }
     if (tactics.threeShotMode && window.__BS2019_SHOTS__.update(controller, tactics, delta)) return;
     const nearArc = basketDistance >= 430 && basketDistance <= 650;
     if (
@@ -295,6 +316,11 @@
       }
     };
     basePrototype.__bs2019TacticalOverlay = true;
+    const originalReleasePump = basePrototype.releaseBlockOrPump;
+    basePrototype.releaseBlockOrPump = function tacticalPumpRelease(delta) {
+      if (activeTacticsBySide.get(this.SIDE)?.contestAwareness && this.player.withBall && this.player.isBlockedOrPump) return true;
+      return originalReleasePump.call(this, delta);
+    };
     const originalThrow = engine.PlayerObject.prototype.makeThrow;
     engine.PlayerObject.prototype.makeThrow = function measuredThrow() {
       const stats = matchMechanics[this.SIDE];
@@ -325,6 +351,48 @@
     window.__BS2019_REQUIRE__(17).Signals.MatchProcessorSignal.add((basketSide, points) => {
       if (points === 3 && matchMechanics[-basketSide]) matchMechanics[-basketSide].threeMakes += 1;
     });
+    const originalBlock = engine.NapePhysics.prototype.onBallBlock;
+    engine.NapePhysics.prototype.onBallBlock = function measuredBlock(collision) {
+      const ball = collision.int1.castBody.userData.owner;
+      const shooterSide = ball.SIDE;
+      const before = ball.state;
+      const defender = collision.int2.castShape.body?.userData.owner;
+      originalBlock.call(this, collision);
+      if (before !== "block" && ball.state === "block" && defender) {
+        if (matchMechanics[defender.SIDE]) matchMechanics[defender.SIDE].blocks += 1;
+        if (matchMechanics[shooterSide]) matchMechanics[shooterSide].shotsBlocked += 1;
+      }
+    };
+    const originalDispossessed = engine.PlayerObject.prototype.getBeStolen;
+    engine.PlayerObject.prototype.getBeStolen = function measuredDispossession(...args) {
+      const hadBall = this.withBall;
+      const result = originalDispossessed.apply(this, args);
+      if (hadBall && !this.withBall && matchMechanics[this.SIDE]) matchMechanics[this.SIDE].dispossessions += 1;
+      return result;
+    };
+  }
+
+  function installHumanResults() {
+    const { engine, states } = modules();
+    const originalFinish = engine.MainGameCore.prototype.finishMatch;
+    engine.MainGameCore.prototype.finishMatch = function persistentHumanResult() {
+      if (humanMode && this.nextState === "PostMatch" && !this.isOvertime && !lastHumanResult) {
+        lastHumanResult = { score: engine.Inventory.instance.matchData.matchScore.slice() };
+      }
+      originalFinish.call(this);
+      if (humanMode && lastHumanResult) {
+        phaserGame().paused = true;
+        window.dispatchEvent(new CustomEvent("bs2019-match-ended", { detail: lastHumanResult }));
+      }
+    };
+    const originalPostMatch = states.Gameplay.prototype.onPostMatch;
+    states.Gameplay.prototype.onPostMatch = function keepHumanScoreVisible() {
+      if (humanMode && lastHumanResult) {
+        this.closePopup();
+        return;
+      }
+      return originalPostMatch.call(this);
+    };
   }
 
   function installEvaluationClock() {
@@ -354,6 +422,8 @@
   }
 
   function configureMatch({ candidate, opponent, opponentSkill = 8, candidateSide = 0, human = false }) {
+    humanMode = human;
+    lastHumanResult = null;
     const { engine, aiSkills } = modules();
     ensureSkillProfiles(aiSkills);
 
@@ -370,7 +440,8 @@
 
     activeTacticsBySide.clear();
     matchMechanics = Object.fromEntries([-1, 1].map((side) => [side, {
-      shots: 0, threeAttempts: 0, threeMakes: 0, threeReleases: [], ultimateUses: 0, ultimateCharges: []
+      shots: 0, threeAttempts: 0, threeMakes: 0, threeReleases: [], ultimateUses: 0, ultimateCharges: [],
+      blocks: 0, shotsBlocked: 0, dispossessions: 0, contestDeferrals: 0, pumpFakes: 0, jitterChanges: 0, defensiveJumps: 0
     }]));
     const candidateControllerSide = candidateSide === 0 ? -1 : 1;
     if (candidateAgent.tactics) activeTacticsBySide.set(candidateControllerSide, candidateAgent.tactics);
@@ -434,6 +505,7 @@
   async function startConfiguredMatch({ duration = 12, overtime = 4, speed = 0.25, candidateSide = 0 }) {
     const { engine, states, constants } = modules();
     const game = phaserGame();
+    game.paused = false;
     constants.MATCH_TIME = Math.max(2, Number(duration));
     constants.OVERTIME_TIME = Math.max(1, Number(overtime));
     game.time.slowMotion = Math.max(0.05, Number(speed));
@@ -507,6 +579,7 @@
   const api = {
     ready: false,
     ultimateCooldown: SHARED_ULTIMATE_COOLDOWN,
+    lastResult: () => lastHumanResult,
     runEvaluation,
     startHumanMatch,
     snapshot,
@@ -520,6 +593,7 @@
 
   installTacticalOverlay();
   installEvaluationClock();
+  installHumanResults();
 
   waitFor(() => {
     const { engine, states, aiSkills } = modules();
