@@ -9,19 +9,31 @@ menu is hidden; the same evolved profile is loaded on every restart.
 You control the player on the left. Use the arrow keys or WASD to move and jump,
 X to shoot or steal, and Z for the special move. Double-tap left/right to dash.
 
-The opponent combines trained native skill parameters with a tactical controller
-for close defence, steals, jump contests, three-point shot selection, pressure
-dashes, rebounds and possession protection. The controller also supports trained
-step-back and dunk decisions when they improve held-out match results. Movement
-and shots use the game's normal physics.
+The opponent combines evolved skill parameters with a tactical controller for
+close defence, steals, jump contests, pressure dashes, rebounds and dunks. For a
+planned three it sets up near the arc, takes off outside the line, jumps forward,
+brakes and releases high enough to avoid the game's low-release accuracy penalty.
+Short step-backs are limited to 18 pixels and never use a backward dash. Shot
+physics, random dispersion and the game's three-point scoring rules are unchanged.
+
+Both players have the same **18-second ultimate recharge**. Cooldown is enforced
+as a shared match rule and cannot be reduced by an evolved bot profile. The
+previous bot's 12-second cooldown advantage has been removed.
 
 The selected model lives in `site/2019/evolved-profile.json`. Its saved evaluation
 and `site/2019/release-audit.json` record the match evidence used for selection.
-The release candidate beat the previous evolved champion with 8 wins, 10 draws
-and 6 losses across 24 fresh matches (average score margin +0.333). A separate
-40-match audit against the strongest built-in bot produced 18 wins, 12 draws and
-10 losses (average score margin +0.375). Both audits swapped court sides for
-each seed and used 18-second regulation matches.
+Current validation uses completed 30-second regulation games with swapped court
+sides, equal ultimate cooldowns, and measured three-point attempts/makes. Earlier
+audit figures were produced by an evaluator that could cap games early and are
+superseded. The corrected evaluator advances the engine and character animations
+together; regular human play retains the game's original timing.
+
+On 24 fresh, completed games against the previous controller (also using the fair
+18-second cooldown), this release won 15 and lost 9, averaging +1.417 points. It
+made 18 of 19 recorded threes, compared with the old controller's 0 of 26. No deep
+releases or early ultimates were recorded for the new bot. This is a small match
+sample rather than a guaranteed shooting percentage. A separate controlled drill
+produced 68 made threes in 80 attempts for its forward-jump release.
 The training method is an evolution strategy over the game's parameters and
 tactical decisions, rather than a neural RL network.
 

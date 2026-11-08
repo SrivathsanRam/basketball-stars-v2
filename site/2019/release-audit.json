@@ -1,22 +1,125 @@
 {
-  "auditedAt": "2026-11-07T07:45:19.865Z",
-  "duration": 18,
-  "previousChampion": {
-    "fitness": 0.375,
-    "meanDifferential": 0.3333333333333333,
-    "winRate": 0.3333333333333333,
-    "drawRate": 0.4166666666666667,
-    "lossRate": 0.25,
-    "matches": 24
-  },
-  "selectedNativeAudit": {
-    "fitness": 0.475,
-    "meanDifferential": 0.375,
-    "winRate": 0.45,
-    "drawRate": 0.3,
-    "lossRate": 0.25,
-    "matches": 40
-  },
-  "promoted": true,
-  "selectedProfile": "Evolved 2019 bot — step-backs, steals, blocks and threes"
+  "auditedAt": "2026-11-08T17:35:11.339Z",
+  "duration": 30,
+  "ultimateCooldownSeconds": 18,
+  "selection": "forward 40",
+  "screening": [
+    {
+      "name": "forward 40",
+      "metrics": {
+        "meanDifferential": 2.375,
+        "winRate": 0.625,
+        "drawRate": 0,
+        "lossRate": 0.375,
+        "matches": 8,
+        "completed": 8,
+        "capped": 0,
+        "candidate": {
+          "threeAttempts": 10,
+          "threeMakes": 9,
+          "threeRate": 0.9,
+          "jumpReleases": 9,
+          "deepReleases": 0,
+          "ultimateUses": 2,
+          "earlyUltimates": 0
+        },
+        "opponent": {
+          "threeAttempts": 9,
+          "threeMakes": 0,
+          "threeRate": 0,
+          "jumpReleases": 0,
+          "deepReleases": 9,
+          "ultimateUses": 2,
+          "earlyUltimates": 0
+        }
+      }
+    },
+    {
+      "name": "forward 55",
+      "metrics": {
+        "meanDifferential": 1.25,
+        "winRate": 0.625,
+        "drawRate": 0,
+        "lossRate": 0.375,
+        "matches": 8,
+        "completed": 6,
+        "capped": 2,
+        "candidate": {
+          "threeAttempts": 7,
+          "threeMakes": 6,
+          "threeRate": 0.8571428571428571,
+          "jumpReleases": 6,
+          "deepReleases": 0,
+          "ultimateUses": 2,
+          "earlyUltimates": 0
+        },
+        "opponent": {
+          "threeAttempts": 9,
+          "threeMakes": 0,
+          "threeRate": 0,
+          "jumpReleases": 0,
+          "deepReleases": 8,
+          "ultimateUses": 2,
+          "earlyUltimates": 0
+        }
+      }
+    },
+    {
+      "name": "stationary jumper",
+      "metrics": {
+        "meanDifferential": 1,
+        "winRate": 0.625,
+        "drawRate": 0,
+        "lossRate": 0.375,
+        "matches": 8,
+        "completed": 8,
+        "capped": 0,
+        "candidate": {
+          "threeAttempts": 11,
+          "threeMakes": 6,
+          "threeRate": 0.5454545454545454,
+          "jumpReleases": 10,
+          "deepReleases": 0,
+          "ultimateUses": 4,
+          "earlyUltimates": 0
+        },
+        "opponent": {
+          "threeAttempts": 8,
+          "threeMakes": 0,
+          "threeRate": 0,
+          "jumpReleases": 0,
+          "deepReleases": 8,
+          "ultimateUses": 4,
+          "earlyUltimates": 0
+        }
+      }
+    }
+  ],
+  "validation": {
+    "meanDifferential": 1.4166666666666667,
+    "winRate": 0.625,
+    "drawRate": 0,
+    "lossRate": 0.375,
+    "matches": 24,
+    "completed": 24,
+    "capped": 0,
+    "candidate": {
+      "threeAttempts": 19,
+      "threeMakes": 18,
+      "threeRate": 0.9473684210526315,
+      "jumpReleases": 18,
+      "deepReleases": 0,
+      "ultimateUses": 13,
+      "earlyUltimates": 0
+    },
+    "opponent": {
+      "threeAttempts": 26,
+      "threeMakes": 0,
+      "threeRate": 0,
+      "jumpReleases": 1,
+      "deepReleases": 23,
+      "ultimateUses": 11,
+      "earlyUltimates": 0
+    }
+  }
 }

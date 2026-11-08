@@ -5,7 +5,17 @@
   const CUSTOM_OPPONENT_SKILL = 10;
   const originalRandom = Math.random;
   const activeTacticsBySide = new Map();
+  let matchMechanics = {};
+  let simulationRate = 1;
+  let simulationAccumulator = 0;
+  let animationClock = null;
+  let originalAnimationAdvance = null;
+  const SHARED_ULTIMATE_COOLDOWN = 18;
   const tacticalDefaults = Object.freeze({
+    threeShotMode: 0,
+    threeTakeoffDistance: 535,
+    threeReleaseHeight: 280,
+    threeForwardTravel: 40,
     threePointChance: 0.2,
     longThreeOffset: 0,
     stepBackTriggerRange: 0,
@@ -88,6 +98,9 @@
         result[key] = Number(value);
       }
     }
+    // Recharge is a match rule, never an evolvable AI advantage. This is the
+    // stock human duration, applied to every human and AI skill used here.
+    result.coolDown = SHARED_ULTIMATE_COOLDOWN;
     return result;
   }
 
@@ -114,13 +127,14 @@
     const distance = Math.abs(playerX - opponentX);
     const side = controller.SIDE;
     const delta = Number(controller.__tacticalDelta) || 0.025;
+    if (!player.withBall) window.__BS2019_SHOTS__.reset(controller);
     if (Number.isFinite(tactics.threePointChance)) {
       controller.chanceForThree = Math.max(0, Math.min(1, tactics.threePointChance));
     }
 
     controller.__stepBackCooldown = Math.max(0, (controller.__stepBackCooldown || 0) - delta);
 
-    if (controller.__stepBackPhase) {
+    if (!tactics.threeShotMode && controller.__stepBackPhase) {
       if (!player.withBall) {
         controller.__stepBackPhase = 0;
         controller.__stepBackCooldown = 0.8;
@@ -187,9 +201,10 @@
     }
 
     const basketDistance = side === 1 ? playerX : controller.width - playerX;
+    if (tactics.threeShotMode && window.__BS2019_SHOTS__.update(controller, tactics, delta)) return;
     const nearArc = basketDistance >= 430 && basketDistance <= 650;
     if (
-      player.isGrounded &&
+      !tactics.threeShotMode && player.isGrounded &&
       controller.__stepBackCooldown <= 0 &&
       !controller.__stepBackConsidered &&
       nearArc &&
@@ -243,8 +258,9 @@
     if (basePrototype.__bs2019TacticalOverlay) return;
     const originalUpdate = basePrototype.update;
     basePrototype.update = function tacticalUpdate(delta) {
-      originalUpdate.call(this, delta);
       const tactics = activeTacticsBySide.get(this.SIDE);
+      if (tactics) this.chanceForThree = tactics.threePointChance;
+      originalUpdate.call(this, delta);
       if (tactics) {
         this.__tacticalDelta = delta;
         applyTacticalPolicy(this, tactics);
@@ -252,9 +268,22 @@
     };
     const originalSetAttackPoint = basePrototype.setAttackPoint;
     basePrototype.setAttackPoint = function tacticalAttackPoint(requested, jumpPoint) {
-      originalSetAttackPoint.call(this, requested, jumpPoint);
       const tactics = activeTacticsBySide.get(this.SIDE);
+      if (tactics) this.chanceForThree = tactics.threePointChance;
+      originalSetAttackPoint.call(this, requested, jumpPoint);
       const stockThreePoint = this.SIDE === 1 ? 510 : 290;
+      const choseThree = requested === 0 && Math.abs(this.attackPoint - stockThreePoint) < 0.001;
+      if (tactics?.threeShotMode) {
+        this.__threePlan = null;
+        const possessionDistance = this.SIDE === 1 ? this.player.getX() : this.width - this.player.getX();
+        this.__plannedThree = requested === 0 && possessionDistance >= 380 && Math.random() < tactics.threePointChance;
+        if (this.__plannedThree) {
+          const distance = Math.max(510, Math.min(555, tactics.threeTakeoffDistance));
+          this.attackPoint = this.SIDE === 1 ? distance : this.width - distance;
+          this.jumpPoint = this.attackPoint;
+        }
+        return;
+      }
       if (
         tactics &&
         requested === 0 &&
@@ -266,6 +295,62 @@
       }
     };
     basePrototype.__bs2019TacticalOverlay = true;
+    const originalThrow = engine.PlayerObject.prototype.makeThrow;
+    engine.PlayerObject.prototype.makeThrow = function measuredThrow() {
+      const stats = matchMechanics[this.SIDE];
+      if (stats && this.withBall) {
+        stats.shots += 1;
+        const takeoff = this.isGrounded ? this.getX() : this.pointOfThrow;
+        const isThree = (takeoff - this.threePointDistance) * this.SIDE >= 0;
+        if (isThree) {
+          stats.threeAttempts += 1;
+          if (stats.threeReleases.length < 100) stats.threeReleases.push({
+            takeoffDistance: this.SIDE === 1 ? takeoff : 800 - takeoff,
+            releaseDistance: this.SIDE === 1 ? this.getX() : 800 - this.getX(),
+            height: this.getY(), velocityX: this.body.velocity.x
+          });
+        }
+      }
+      return originalThrow.call(this);
+    };
+    const originalSuper = engine.PlayerObject.prototype.startSuper;
+    engine.PlayerObject.prototype.startSuper = function measuredSuper() {
+      const stats = matchMechanics[this.SIDE];
+      if (stats) {
+        stats.ultimateUses += 1;
+        stats.ultimateCharges.push({ elapsedCharge: this.energyBar.curTime, requiredCharge: this.energyBar.fullTime });
+      }
+      return originalSuper.call(this);
+    };
+    window.__BS2019_REQUIRE__(17).Signals.MatchProcessorSignal.add((basketSide, points) => {
+      if (points === 3 && matchMechanics[-basketSide]) matchMechanics[-basketSide].threeMakes += 1;
+    });
+  }
+
+  function installEvaluationClock() {
+    const { states, engine } = modules();
+    const prototype = states.Gameplay.prototype;
+    const originalStep = prototype.updateGameController;
+    prototype.updateGameController = function evaluationStep(delta) {
+      if (simulationRate === 1) return originalStep.call(this, delta);
+      // Gameplay uses Date.now(), independently of Phaser's slowMotion. Repeat
+      // its original fixed step and animation clock together for evaluation.
+      // Human play keeps the original timing path above.
+      if (!animationClock) {
+        animationClock = dragonBones.PhaserFactory.factory.dragonBones;
+        originalAnimationAdvance = animationClock.advanceTime;
+        animationClock.advanceTime = function evaluationAnimation(time) {
+          if (simulationRate === 1) return originalAnimationAdvance.call(this, time);
+        };
+      }
+      simulationAccumulator += simulationRate;
+      while (simulationAccumulator >= 1) {
+        originalStep.call(this, delta);
+        const scale = engine.MainGameCore.instance.timeScale;
+        originalAnimationAdvance.call(animationClock, delta * (scale === 0 ? 0.3 : scale));
+        simulationAccumulator -= 1;
+      }
+    };
   }
 
   function configureMatch({ candidate, opponent, opponentSkill = 8, candidateSide = 0, human = false }) {
@@ -273,6 +358,7 @@
     ensureSkillProfiles(aiSkills);
 
     const strongestNative = aiSkills.botsSkills[8];
+    for (const profile of aiSkills.botsSkills) profile.coolDown = SHARED_ULTIMATE_COOLDOWN;
     const candidateAgent = unpackAgent(candidate);
     const opponentAgent = unpackAgent(opponent);
     aiSkills.botsSkills[CANDIDATE_SKILL] = sanitizeProfile(candidateAgent.parameters, strongestNative);
@@ -283,6 +369,9 @@
     }
 
     activeTacticsBySide.clear();
+    matchMechanics = Object.fromEntries([-1, 1].map((side) => [side, {
+      shots: 0, threeAttempts: 0, threeMakes: 0, threeReleases: [], ultimateUses: 0, ultimateCharges: []
+    }]));
     const candidateControllerSide = candidateSide === 0 ? -1 : 1;
     if (candidateAgent.tactics) activeTacticsBySide.set(candidateControllerSide, candidateAgent.tactics);
     if (opponentAgent.tactics) activeTacticsBySide.set(-candidateControllerSide, opponentAgent.tactics);
@@ -330,7 +419,15 @@
       player: position(player),
       opponent: position(opponent),
       ball: position(core.ball),
-      ballState: core.ball ? core.ball.state : null
+      ballState: core.ball ? core.ball.state : null,
+      mechanics: {
+        candidate: matchMechanics[candidateSide === 0 ? -1 : 1],
+        opponent: matchMechanics[candidateSide === 0 ? 1 : -1],
+        cooldowns: [...core.playersLeft, ...core.playersRight].map((player) => ({
+          side: player.SIDE, isHuman: player.isHuman, seconds: player.energyBar.fullTime,
+          charge: player.energyBar.curTime, ready: Boolean(player.readyForSuper)
+        }))
+      }
     };
   }
 
@@ -379,6 +476,8 @@
   }
 
   async function runEvaluation(options) {
+    simulationRate = Math.max(1, Math.min(20, 1 / (Number(options.speed) || 0.25)));
+    simulationAccumulator = 0;
     const seed = Number(options.seed) || 1;
     Math.random = mulberry32(seed);
     const candidateSide = Number(options.candidateSide) === 1 ? 1 : 0;
@@ -387,11 +486,13 @@
     const duration = Math.max(2, Number(options.duration) || 12);
     const overtime = Math.max(1, Number(options.overtime) || 4);
     const speed = Math.max(0.05, Number(options.speed) || 0.25);
-    const timeout = Math.max(10000, (duration + overtime + 8) * speed * 3000);
+    const timeout = Math.max(20000, (duration + overtime + 20) * speed * 5000);
     return waitForMatchResult(candidateSide, timeout);
   }
 
   async function startHumanMatch(candidate, options = {}) {
+    simulationRate = 1;
+    simulationAccumulator = 0;
     Math.random = originalRandom;
     configureMatch({ candidate, human: true, candidateSide: 1 });
     await startConfiguredMatch({
@@ -405,6 +506,7 @@
 
   const api = {
     ready: false,
+    ultimateCooldown: SHARED_ULTIMATE_COOLDOWN,
     runEvaluation,
     startHumanMatch,
     snapshot,
@@ -417,6 +519,7 @@
   window.__BS2019_TRAINER__ = api;
 
   installTacticalOverlay();
+  installEvaluationClock();
 
   waitFor(() => {
     const { engine, states, aiSkills } = modules();
