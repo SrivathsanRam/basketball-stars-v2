@@ -2,95 +2,86 @@
 
 [Play Basketball Stars 2019](https://srivathsanram.github.io/basketball-stars-v2/)
 
-The title screen uses the original game's logo, player artwork and font.
-Choose a difficulty, then press **Play**. Hard is selected by default.
+Choose a difficulty on the original-style title screen, then press **Play**.
+Hard remains selected by default.
 
 | Difficulty | Opponent |
 | --- | --- |
 | Easy | Original 2019 standard single-match AI (native skill 3) |
-| Medium | Previous evolved bot, with calibrated jump-shot threes (v6) |
-| Hard | Preserved smart-contest and shot-fake bot (v7) |
-| Extreme | Hard's offense with learned defensive corrections (v8) |
+| Medium | Preserved evolved jump-shot opponent (v6) |
+| Hard | Preserved smart-contest and shot-fake opponent (v7) |
+| Extreme | Hard-descended opponent improved through genetic self-play (v9) |
 
-The difficulty manifest is `site/2019/difficulties.json`. Frozen model files live
-in `site/2019/profiles/`. Hard and Medium retain their previous parameters and
-tactics. `evolved-profile.json` remains a compatibility copy of Hard; the menu
-loads the explicit difficulty profiles.
+The manifest is `site/2019/difficulties.json`; models are in
+`site/2019/profiles/`. Hard and Medium remain byte-for-byte unchanged.
+`evolved-profile.json` remains a compatibility copy of Hard.
 
-You control the player on the left. Arrow keys or WASD move and jump, X shoots
-or steals, Z uses the special move, and a double-tap left/right dashes.
-Both players have an **18-second ultimate recharge on every difficulty**.
-The runtime applies this common rule to the original AI as well as evolved bots.
-Movement speed, jumping, collisions, shot physics and normal human match timing
-remain those of the original game.
+You control the left player. Arrow keys or WASD move and jump, X shoots or
+steals, Z uses the special move, and double-tapping left/right dashes.
+Both players share an **18-second ultimate recharge on every difficulty**.
+Original movement, jumping, collision and shot physics remain unchanged.
 
-At full time a persistent score card displays both scores and the winner.
-**Play again** retains the chosen difficulty; **Choose difficulty** returns to
-the title screen. The in-match **Menu** button also returns to the title screen.
+The final score and winner remain visible after a match. **Play again** keeps
+the selected difficulty; **Choose difficulty** and the in-match **Menu** button
+return to the title screen.
 
-## Learning experiment
+## How Extreme learned
 
-The new experiments optimize observation-to-action policy weights through
-cross-entropy evolution using rewards from the actual game engine. This is
-evolutionary policy search, not PPO. It evaluates starting from random weights,
-initializing from demonstrations of Hard, and learning corrections to Hard.
-Movement, jumping, stealing and dashing are policy outputs. Offense and rebounds
-remain inherited from Hard, so this is a hybrid learned defender, not a complete
-bot learned from scratch.
+This run started from Hard's parameters and tactics with zero residual weights.
+Genetic self-play evolved decision parameters, tactics and **216 general control
+weights**. Opponents included frozen Hard and earlier self-play champions.
+The previous Extreme was an evaluation opponent, never a genetic ancestor.
 
-Training uses visible positions, velocities and player/ball state. The policy
-cannot inspect human key presses or future random shots. The varied possession
-tests include wide closeouts, trailing defenders, retreating shots, retreat
-dashes, forward jumps, pump fakes and direction changes, on both court sides.
-Separate seeds are used for training, candidate selection and final tests.
-The isolated defense drills disable both ultimates equally. Complete-game tests
-retain the shared 18-second recharge and reject truncated matches.
+Fitness used completed-match outcomes only: +1 for a win, -1 for a loss, 0 for
+a draw, plus 0.01 times score difference clipped to [-20, 20]. There were no
+rewards for particular moves and no mechanic-specific drills in this run.
+The model still refines Hard's existing controller; it was not learned entirely
+from scratch. Accuracy, dunk skill and the shared ultimate cooldown were fixed.
 
-A difficulty is promoted to Extreme only after stronger defense and a positive
-full-game comparison against Hard have been verified. Scripted drills and bot
-matches are measurements, not a guarantee of beating every human strategy.
+Training completed **2,714 games across 18 generations**. The released candidate
+comes from generation 17. Training used shorter matches; final evaluation used
+the playable rules of **60 seconds plus 15-second overtime**, with paired seeds
+and the candidate playing both court sides.
 
-Extreme's residual policy trained on **57,600 possessions**. In 256 fresh
-scripted possessions, it allowed **24 made threes versus Hard's 63**, and recorded
-**180 blocks versus 124**. In a separate 256-possession fast-release stress test,
-made threes fell from **97 to 77**. These counts use starting possessions as the
-denominator, including possessions ending in steals or blocks.
+## Final evaluation
 
-Each learning approach received 57,600 evolutionary training possessions.
-The frozen candidates were then compared on new seeds, with a fresh game world
-per policy. Lower numbers below mean fewer made threes allowed:
+Development results selected the candidate; the table below contains only the
+separate final audit. Every required match must complete, and both players'
+ultimate telemetry must satisfy the same recharge rule.
 
-| Defender | Varied attacks (256 possessions) | Fast releases (256 possessions) |
+| Final audit cohort | Wins / completed games | Mean score difference |
 | --- | ---: | ---: |
-| Hard | 63 | 97 |
-| Learned from random initialization | 70 | 171 |
-| Learned from imitation of Hard | 58 | 152 |
-| Learned corrections to Hard (Extreme) | 24 | 77 |
+| Synchronized engine versus Hard | 81 / 100 | +2.48 |
+| Synchronized engine versus previous Extreme | 36 / 40 | +5.30 |
+| Native speed-1 confirmation versus Hard | 22 / 24 | +4.46 |
+| Native speed-1 confirmation versus previous Extreme | 10 / 12 | +3.67 |
 
-Within this experiment, replacing the whole defender with a learned policy did
-not generalize well to quick shots. Learning corrections preserved useful block
-timing while improving it. This does not establish a limit on larger neural RL
-models or longer, broader training. The comparison concerns these compact
-evolutionary policies and this fixed training budget.
+Promotion required at least 65% wins and +2 mean points against Hard, positive
+paired-bootstrap lower bounds, acceptable results on both sides, and no observed
+regression against the previous Extreme. The primary cohorts contain 100 Hard
+games and 40 previous-Extreme games. Native confirmation adds 24 and 12 games;
+it checks transfer to normal rendering rather than claiming separate significance.
 
-The selected candidate won **13 of 24 completed 60-second games** against Hard,
-averaging **+0.708 points**, with court sides swapped and fresh random seeds.
-That is a modest overall advantage; the more substantial gain is in the
-three-point drills. Neither player used an ultimate before its 18-second charge.
-Fast retreat-dash shots and some direction changes can still escape the defense.
-The [machine-readable experiment report](site/2019/learning-audit.json) records
-the comparisons, conditions and limitations.
+An earlier candidate's final audit won **69/100** against Hard but averaged only
+**+1.12 points**, so it failed promotion. Audit 2 uses a frozen new candidate and
+untouched seeds. The predeclared repeated-audit rule spends
+`alpha_k = 0.05 / [k(k+1)]`; audit 2 uses a lower-tail allowance of **0.008333**.
+Pair-bootstrap intervals are approximate; the prior-Extreme comparison is an
+observed regression guard, not a statistical proof of noninferiority.
 
-## Deployment
+The [current self-play audit](site/2019/selfplay-audit.json) records raw matches,
+paired schedules, candidate and runtime hashes, gates, and limitations. The old
+`learning-audit.json` defense-drill report is archival evidence for the previous
+Extreme, not evidence for this model. Bot comparisons cannot guarantee victory
+against every human strategy.
 
-GitHub Actions publishes the static `site/` directory to GitHub Pages on pushes
-to `main`. No server or installation is needed to play. Relative asset paths
-support the `/basketball-stars-v2/` project URL, and content hashes refresh
-updated scripts and styles.
+## Deployment and credits
 
-## Credits
+GitHub Actions publishes the static `site/` directory on pushes to `main`.
+No server or installation is needed to play. Relative paths support the GitHub
+project URL, and content hashes refresh updated scripts and styles.
 
-The underlying game engine, artwork, animations and audio are by MadPuffers,
-from the Basketball Stars 2019 build served by CrazyGames. This repository adds
-the evolved profiles, learned policy runtime, tactical overlay and play wrapper.
-Original game assets retain their original ownership.
+The original engine, artwork, animations and audio are by MadPuffers, from the
+Basketball Stars 2019 build served by CrazyGames. This repository adds evolved
+profiles, policy code, a tactical overlay and the play wrapper. Original assets
+retain their original ownership.

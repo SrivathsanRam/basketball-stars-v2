@@ -6,6 +6,7 @@
   const originalRandom = Math.random;
   const activeTacticsBySide = new Map();
   const activeLearnedDefenseBySide = new Map();
+  const activeLearnedPolicyBySide = new Map();
   let matchMechanics = {};
   let simulationRate = 1;
   let simulationAccumulator = 0;
@@ -122,7 +123,7 @@
           ([, value]) => Number.isFinite(Number(value))
         ))
         : null;
-      return { parameters: agent.parameters, tactics, learnedDefense: agent.learnedDefense || null };
+      return { parameters: agent.parameters, tactics, learnedDefense: agent.learnedDefense || null, learnedPolicy: agent.learnedPolicy || null };
     }
     return { parameters: agent, tactics: null };
   }
@@ -298,6 +299,8 @@
         this.__tacticalDelta = delta;
         applyTacticalPolicy(this, tactics);
       }
+      const learnedPolicy = activeLearnedPolicyBySide.get(this.SIDE);
+      if (learnedPolicy) window.__BS2019_SELFPLAY__?.update(this, delta, learnedPolicy);
     };
     const originalSetAttackPoint = basePrototype.setAttackPoint;
     basePrototype.setAttackPoint = function tacticalAttackPoint(requested, jumpPoint) {
@@ -456,6 +459,7 @@
 
     activeTacticsBySide.clear();
     activeLearnedDefenseBySide.clear();
+    activeLearnedPolicyBySide.clear();
     matchMechanics = Object.fromEntries([-1, 1].map((side) => [side, {
       shots: 0, threeAttempts: 0, threeMakes: 0, threeReleases: [], ultimateUses: 0, ultimateCharges: [],
       blocks: 0, shotsBlocked: 0, dispossessions: 0, contestDeferrals: 0, pumpFakes: 0, jitterChanges: 0, defensiveJumps: 0
@@ -465,6 +469,8 @@
     if (opponentAgent.tactics) activeTacticsBySide.set(-candidateControllerSide, opponentAgent.tactics);
     if (candidateAgent.learnedDefense && nativeCandidateSkill === null) activeLearnedDefenseBySide.set(candidateControllerSide, candidateAgent.learnedDefense);
     if (opponentAgent.learnedDefense) activeLearnedDefenseBySide.set(-candidateControllerSide, opponentAgent.learnedDefense);
+    if (candidateAgent.learnedPolicy && nativeCandidateSkill === null) activeLearnedPolicyBySide.set(candidateControllerSide, candidateAgent.learnedPolicy);
+    if (opponentAgent.learnedPolicy) activeLearnedPolicyBySide.set(-candidateControllerSide, opponentAgent.learnedPolicy);
 
     const inventory = engine.Inventory.instance;
     const match = inventory.matchData;
@@ -516,7 +522,8 @@
         policies: [-1, 1].map((side) => ({
           side,
           tactical: activeTacticsBySide.has(side),
-          learnedDefense: activeLearnedDefenseBySide.get(side)?.schema || null
+          learnedDefense: activeLearnedDefenseBySide.get(side)?.schema || null,
+          learnedPolicy: activeLearnedPolicyBySide.get(side)?.schema || null
         })),
         cooldowns: [...core.playersLeft, ...core.playersRight].map((player) => ({
           side: player.SIDE, isHuman: player.isHuman, seconds: player.energyBar.fullTime,
@@ -526,7 +533,7 @@
     };
   }
 
-  async function startConfiguredMatch({ duration = 12, overtime = 4, speed = 0.25, candidateSide = 0 }) {
+  async function startConfiguredMatch({ duration = 12, overtime = 4, speed = 0.25, candidateSide = 0, waitForCountdown = true }) {
     const { engine, states, constants } = modules();
     const game = phaserGame();
     game.paused = false;
@@ -554,7 +561,7 @@
       12000,
       "gameplay objects"
     );
-    await waitFor(() => core.isPlaying, 20000, "match countdown");
+    if (waitForCountdown) await waitFor(() => core.isPlaying, 20000, "match countdown");
     status("2019 evaluation match running");
     return { core, candidateSide };
   }
@@ -604,11 +611,25 @@
     status("You are playing the evolved 2019 bot");
   }
 
+  async function prepareFastEvaluation(options) {
+    simulationRate = 1;
+    simulationAccumulator = 0;
+    Math.random = mulberry32(Number(options.seed) || 1);
+    const candidateSide = Number(options.candidateSide) === 1 ? 1 : 0;
+    configureMatch({ ...options, candidateSide, human: false });
+    await startConfiguredMatch({ ...options, candidateSide, speed: 1, waitForCountdown: false });
+    // The evaluator advances native logic, animations and tweens explicitly.
+    // Avoid Phaser's pause event, which freezes the tween callbacks it needs.
+    phaserGame()._paused = true;
+    return snapshot(candidateSide);
+  }
+
   const api = {
     ready: false,
     ultimateCooldown: SHARED_ULTIMATE_COOLDOWN,
     lastResult: () => lastHumanResult,
     runEvaluation,
+    prepareFastEvaluation,
     startHumanMatch,
     pauseHumanMatch() {
       if (humanMode) phaserGame().paused = true;
