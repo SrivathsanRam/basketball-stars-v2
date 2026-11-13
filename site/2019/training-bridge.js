@@ -5,6 +5,7 @@
   const CUSTOM_OPPONENT_SKILL = 10;
   const originalRandom = Math.random;
   const activeTacticsBySide = new Map();
+  const activeLearnedDefenseBySide = new Map();
   let matchMechanics = {};
   let simulationRate = 1;
   let simulationAccumulator = 0;
@@ -121,7 +122,7 @@
           ([, value]) => Number.isFinite(Number(value))
         ))
         : null;
-      return { parameters: agent.parameters, tactics };
+      return { parameters: agent.parameters, tactics, learnedDefense: agent.learnedDefense || null };
     }
     return { parameters: agent, tactics: null };
   }
@@ -139,7 +140,10 @@
     const delta = Number(controller.__tacticalDelta) || 0.025;
     controller.__decisionStats = matchMechanics[side];
     if (!player.withBall) window.__BS2019_SHOTS__.reset(controller);
-    else controller.__duelDefense = null;
+    else {
+      controller.__duelDefense = null;
+      controller.__learnedDefenseState = null;
+    }
     if (Number.isFinite(tactics.threePointChance)) {
       controller.chanceForThree = Math.max(0, Math.min(1, tactics.threePointChance));
     }
@@ -176,7 +180,15 @@
       }
     }
 
-    if (tactics.predictiveDefense && !player.withBall && window.__BS2019_DUEL__.defend(controller, tactics, delta)) return;
+    const learnedDefense = activeLearnedDefenseBySide.get(side);
+    const learnedPolicy = learnedDefense?.schema === "residual-defense-v1"
+      ? window.__BS2019_RESIDUAL_DEFENSE__ : window.__BS2019_LEARNED_DEFENSE__;
+    if (learnedDefense && !player.withBall && learnedPolicy?.defend(controller, delta, learnedDefense)) return;
+    // Residual inference already advances the base defender, even when it
+    // yields to loose-ball pursuit. Do not advance its timers a second time.
+    const residualAdvancedBase = learnedDefense?.schema === "residual-defense-v1" &&
+      learnedDefense.weights?.length === 96 && learnedPolicy;
+    if (!residualAdvancedBase && tactics.predictiveDefense && !player.withBall && window.__BS2019_DUEL__.defend(controller, tactics, delta)) return;
 
     if (opponent.withBall) {
       controller.__stepBackConsidered = false;
@@ -431,6 +443,10 @@
     for (const profile of aiSkills.botsSkills) profile.coolDown = SHARED_ULTIMATE_COOLDOWN;
     const candidateAgent = unpackAgent(candidate);
     const opponentAgent = unpackAgent(opponent);
+    // Native difficulty 0 is the human profile; 1–8 are the original bots.
+    const nativeCandidateSkill = Number.isInteger(candidate?.nativeSkill)
+      ? Math.max(1, Math.min(8, candidate.nativeSkill)) : null;
+    const resolvedCandidateSkill = nativeCandidateSkill ?? CANDIDATE_SKILL;
     aiSkills.botsSkills[CANDIDATE_SKILL] = sanitizeProfile(candidateAgent.parameters, strongestNative);
     let resolvedOpponentSkill = Math.max(1, Math.min(8, Number(opponentSkill) || 8));
     if (opponent) {
@@ -439,13 +455,16 @@
     }
 
     activeTacticsBySide.clear();
+    activeLearnedDefenseBySide.clear();
     matchMechanics = Object.fromEntries([-1, 1].map((side) => [side, {
       shots: 0, threeAttempts: 0, threeMakes: 0, threeReleases: [], ultimateUses: 0, ultimateCharges: [],
       blocks: 0, shotsBlocked: 0, dispossessions: 0, contestDeferrals: 0, pumpFakes: 0, jitterChanges: 0, defensiveJumps: 0
     }]));
     const candidateControllerSide = candidateSide === 0 ? -1 : 1;
-    if (candidateAgent.tactics) activeTacticsBySide.set(candidateControllerSide, candidateAgent.tactics);
+    if (candidateAgent.tactics && nativeCandidateSkill === null) activeTacticsBySide.set(candidateControllerSide, candidateAgent.tactics);
     if (opponentAgent.tactics) activeTacticsBySide.set(-candidateControllerSide, opponentAgent.tactics);
+    if (candidateAgent.learnedDefense && nativeCandidateSkill === null) activeLearnedDefenseBySide.set(candidateControllerSide, candidateAgent.learnedDefense);
+    if (opponentAgent.learnedDefense) activeLearnedDefenseBySide.set(-candidateControllerSide, opponentAgent.learnedDefense);
 
     const inventory = engine.Inventory.instance;
     const match = inventory.matchData;
@@ -462,10 +481,10 @@
     match.forms = [0, 1];
     match.pb = human ? [["P0"], ["B0"]] : [["B0"], ["B0"]];
     match.skills = human
-      ? [[0], [CANDIDATE_SKILL]]
+      ? [[0], [resolvedCandidateSkill]]
       : candidateSide === 0
-        ? [[CANDIDATE_SKILL], [resolvedOpponentSkill]]
-        : [[resolvedOpponentSkill], [CANDIDATE_SKILL]];
+        ? [[resolvedCandidateSkill], [resolvedOpponentSkill]]
+        : [[resolvedOpponentSkill], [resolvedCandidateSkill]];
     match.restarted = true;
     return { inventory, candidateSide };
   }
@@ -494,6 +513,11 @@
       mechanics: {
         candidate: matchMechanics[candidateSide === 0 ? -1 : 1],
         opponent: matchMechanics[candidateSide === 0 ? 1 : -1],
+        policies: [-1, 1].map((side) => ({
+          side,
+          tactical: activeTacticsBySide.has(side),
+          learnedDefense: activeLearnedDefenseBySide.get(side)?.schema || null
+        })),
         cooldowns: [...core.playersLeft, ...core.playersRight].map((player) => ({
           side: player.SIDE, isHuman: player.isHuman, seconds: player.energyBar.fullTime,
           charge: player.energyBar.curTime, ready: Boolean(player.readyForSuper)
@@ -517,11 +541,15 @@
     // DragonBones armatures. Wait for the same art flag the stock flow relies on.
     await waitFor(() => window.__BS2019_REQUIRE__(22).default.isArtReady, 60000, "character artwork");
     engine.PlayersData.initDragonBones();
+    const previousBall = engine.MainGameCore.instance.ball;
     game.state.start(states.Gameplay.Name, true, false);
     const core = await waitFor(
       () => {
         const instance = engine.MainGameCore.instance;
-        return instance.ball && instance.playersLeft.length && instance.playersRight.length && instance;
+        // Phaser queues state transitions. A paused, unfinished match can still
+        // report isPlaying until the next frame, so wait for the NEW world.
+        return instance.ball && instance.ball !== previousBall &&
+          instance.playersLeft.length && instance.playersRight.length && instance;
       },
       12000,
       "gameplay objects"
@@ -582,6 +610,9 @@
     lastResult: () => lastHumanResult,
     runEvaluation,
     startHumanMatch,
+    pauseHumanMatch() {
+      if (humanMode) phaserGame().paused = true;
+    },
     snapshot,
     nativeProfiles() {
       const { aiSkills } = modules();

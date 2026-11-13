@@ -1,0 +1,962 @@
+{
+  "createdAt": "2026-11-13T13:32:38.411Z",
+  "selected": "Extreme — learned defensive corrections",
+  "modelHash": "d42c420aff225596ce61aeec16fd997a83551d23cb1c2357cdf415ef3d9ce09e",
+  "method": "Cross-entropy evolutionary policy search over 96 action corrections to frozen Hard; offense and rebounds inherited",
+  "training": {
+    "scheduledEpisodesPerArm": 57600,
+    "generations": 50,
+    "population": 24,
+    "episodesPerCandidate": 48,
+    "completedPureTrainingEpisodes": 115200,
+    "completedResidualTrainingEpisodes": 57600,
+    "canceledEarlierRun": "Scratch partial run canceled after physics stall before generation1 completed; its partial episodes excluded from completed budgets.",
+    "rejectedBatches": [
+      {
+        "seed": 700000,
+        "count": 128,
+        "error": "Physics rollout exceeded30seconds"
+      }
+    ],
+    "arms": [
+      "random initialization",
+      "imitation initialization",
+      "residual corrections to Hard"
+    ]
+  },
+  "defense": {
+    "seed": 3900000,
+    "episodesPerPolicy": 256,
+    "freshWorldPerPolicy": true,
+    "quickRelease": false,
+    "results": [
+      {
+        "name": "No defense",
+        "episodes": 256,
+        "points": 457,
+        "makes": 153,
+        "threes": 151,
+        "blocks": 0,
+        "steals": 0,
+        "recoveries": 5,
+        "releases": 256,
+        "jumps": 0,
+        "dashes": 0,
+        "closeoutError": 137.20118660893442,
+        "reward": -5.610339873217866,
+        "timeouts": 0,
+        "byArchetype": {
+          "0": {
+            "episodes": 32,
+            "points": 69,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "1": {
+            "episodes": 32,
+            "points": 69,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "2": {
+            "episodes": 32,
+            "points": 75,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "3": {
+            "episodes": 32,
+            "points": 69,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "4": {
+            "episodes": 32,
+            "points": 24,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "5": {
+            "episodes": 32,
+            "points": 27,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "6": {
+            "episodes": 32,
+            "points": 63,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "7": {
+            "episodes": 32,
+            "points": 61,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          }
+        }
+      },
+      {
+        "name": "Hard",
+        "episodes": 256,
+        "points": 195,
+        "makes": 66,
+        "threes": 63,
+        "blocks": 124,
+        "steals": 1,
+        "recoveries": 7,
+        "releases": 255,
+        "jumps": 220,
+        "dashes": 0,
+        "closeoutError": 42.511403648542135,
+        "reward": -0.38971030729708445,
+        "timeouts": 0,
+        "byArchetype": {
+          "0": {
+            "episodes": 32,
+            "points": 54,
+            "blocks": 8,
+            "steals": 0,
+            "releases": 32
+          },
+          "1": {
+            "episodes": 32,
+            "points": 27,
+            "blocks": 20,
+            "steals": 0,
+            "releases": 32
+          },
+          "2": {
+            "episodes": 32,
+            "points": 6,
+            "blocks": 29,
+            "steals": 0,
+            "releases": 32
+          },
+          "3": {
+            "episodes": 32,
+            "points": 9,
+            "blocks": 28,
+            "steals": 0,
+            "releases": 32
+          },
+          "4": {
+            "episodes": 32,
+            "points": 24,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "5": {
+            "episodes": 32,
+            "points": 27,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "6": {
+            "episodes": 32,
+            "points": 9,
+            "blocks": 26,
+            "steals": 0,
+            "releases": 32
+          },
+          "7": {
+            "episodes": 32,
+            "points": 39,
+            "blocks": 13,
+            "steals": 1,
+            "releases": 31
+          }
+        }
+      },
+      {
+        "name": "Learned defense — imitation",
+        "file": "artifacts/2019-learned-defense/candidate-imitation.json",
+        "episodes": 256,
+        "points": 178,
+        "makes": 60,
+        "threes": 58,
+        "blocks": 21,
+        "steals": 125,
+        "recoveries": 0,
+        "releases": 131,
+        "jumps": 227,
+        "dashes": 78,
+        "closeoutError": 42.78314979190266,
+        "reward": 0.10974620041619461,
+        "timeouts": 0,
+        "byArchetype": {
+          "0": {
+            "episodes": 32,
+            "points": 6,
+            "blocks": 0,
+            "steals": 30,
+            "releases": 2
+          },
+          "1": {
+            "episodes": 32,
+            "points": 6,
+            "blocks": 0,
+            "steals": 30,
+            "releases": 2
+          },
+          "2": {
+            "episodes": 32,
+            "points": 24,
+            "blocks": 0,
+            "steals": 23,
+            "releases": 9
+          },
+          "3": {
+            "episodes": 32,
+            "points": 51,
+            "blocks": 4,
+            "steals": 8,
+            "releases": 24
+          },
+          "4": {
+            "episodes": 32,
+            "points": 12,
+            "blocks": 14,
+            "steals": 0,
+            "releases": 32
+          },
+          "5": {
+            "episodes": 32,
+            "points": 27,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "6": {
+            "episodes": 32,
+            "points": 3,
+            "blocks": 0,
+            "steals": 31,
+            "releases": 1
+          },
+          "7": {
+            "episodes": 32,
+            "points": 49,
+            "blocks": 3,
+            "steals": 3,
+            "releases": 29
+          }
+        }
+      },
+      {
+        "name": "Learned defense — scratch",
+        "file": "artifacts/2019-learned-defense/candidate-scratch.json",
+        "episodes": 256,
+        "points": 216,
+        "makes": 73,
+        "threes": 70,
+        "blocks": 0,
+        "steals": 114,
+        "recoveries": 11,
+        "releases": 142,
+        "jumps": 40,
+        "dashes": 0,
+        "closeoutError": 66.17378636508643,
+        "reward": -0.8393788227301733,
+        "timeouts": 0,
+        "byArchetype": {
+          "0": {
+            "episodes": 32,
+            "points": 6,
+            "blocks": 0,
+            "steals": 30,
+            "releases": 2
+          },
+          "1": {
+            "episodes": 32,
+            "points": 24,
+            "blocks": 0,
+            "steals": 19,
+            "releases": 13
+          },
+          "2": {
+            "episodes": 32,
+            "points": 24,
+            "blocks": 0,
+            "steals": 22,
+            "releases": 10
+          },
+          "3": {
+            "episodes": 32,
+            "points": 57,
+            "blocks": 0,
+            "steals": 8,
+            "releases": 24
+          },
+          "4": {
+            "episodes": 32,
+            "points": 24,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "5": {
+            "episodes": 32,
+            "points": 27,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "6": {
+            "episodes": 32,
+            "points": 3,
+            "blocks": 0,
+            "steals": 31,
+            "releases": 1
+          },
+          "7": {
+            "episodes": 32,
+            "points": 51,
+            "blocks": 0,
+            "steals": 4,
+            "releases": 28
+          }
+        }
+      },
+      {
+        "name": "Extreme — learned defensive corrections",
+        "file": "artifacts/2019-residual-defense/candidate.json",
+        "episodes": 256,
+        "points": 78,
+        "makes": 27,
+        "threes": 24,
+        "blocks": 180,
+        "steals": 0,
+        "recoveries": 6,
+        "releases": 256,
+        "jumps": 249,
+        "dashes": 0,
+        "closeoutError": 47.637946628244464,
+        "reward": 1.8265991067435108,
+        "timeouts": 0,
+        "byArchetype": {
+          "0": {
+            "episodes": 32,
+            "points": 9,
+            "blocks": 27,
+            "steals": 0,
+            "releases": 32
+          },
+          "1": {
+            "episodes": 32,
+            "points": 0,
+            "blocks": 32,
+            "steals": 0,
+            "releases": 32
+          },
+          "2": {
+            "episodes": 32,
+            "points": 0,
+            "blocks": 32,
+            "steals": 0,
+            "releases": 32
+          },
+          "3": {
+            "episodes": 32,
+            "points": 0,
+            "blocks": 32,
+            "steals": 0,
+            "releases": 32
+          },
+          "4": {
+            "episodes": 32,
+            "points": 12,
+            "blocks": 8,
+            "steals": 0,
+            "releases": 32
+          },
+          "5": {
+            "episodes": 32,
+            "points": 27,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "6": {
+            "episodes": 32,
+            "points": 0,
+            "blocks": 32,
+            "steals": 0,
+            "releases": 32
+          },
+          "7": {
+            "episodes": 32,
+            "points": 30,
+            "blocks": 17,
+            "steals": 0,
+            "releases": 32
+          }
+        }
+      }
+    ]
+  },
+  "fastRelease": {
+    "seed": 4900000,
+    "episodesPerPolicy": 256,
+    "freshWorldPerPolicy": true,
+    "quickRelease": "Grounded takeoff0.025–0.175 seconds after receipt, with native pump/dash setup delays for those two archetypes",
+    "results": [
+      {
+        "name": "No defense",
+        "episodes": 256,
+        "points": 566,
+        "makes": 190,
+        "threes": 186,
+        "blocks": 0,
+        "steals": 0,
+        "recoveries": 1,
+        "releases": 256,
+        "jumps": 0,
+        "dashes": 0,
+        "closeoutError": 127.9100919509964,
+        "reward": -6.884726433901991,
+        "timeouts": 0,
+        "byArchetype": {
+          "0": {
+            "episodes": 32,
+            "points": 63,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "1": {
+            "episodes": 32,
+            "points": 75,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "2": {
+            "episodes": 32,
+            "points": 72,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "3": {
+            "episodes": 32,
+            "points": 63,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "4": {
+            "episodes": 32,
+            "points": 66,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "5": {
+            "episodes": 32,
+            "points": 75,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "6": {
+            "episodes": 32,
+            "points": 75,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "7": {
+            "episodes": 32,
+            "points": 77,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          }
+        }
+      },
+      {
+        "name": "Hard",
+        "episodes": 256,
+        "points": 291,
+        "makes": 97,
+        "threes": 97,
+        "blocks": 126,
+        "steals": 0,
+        "recoveries": 1,
+        "releases": 256,
+        "jumps": 222,
+        "dashes": 0,
+        "closeoutError": 53.040903354472796,
+        "reward": -1.5435818067089457,
+        "timeouts": 0,
+        "byArchetype": {
+          "0": {
+            "episodes": 32,
+            "points": 72,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "1": {
+            "episodes": 32,
+            "points": 39,
+            "blocks": 18,
+            "steals": 0,
+            "releases": 32
+          },
+          "2": {
+            "episodes": 32,
+            "points": 0,
+            "blocks": 32,
+            "steals": 0,
+            "releases": 32
+          },
+          "3": {
+            "episodes": 32,
+            "points": 9,
+            "blocks": 24,
+            "steals": 0,
+            "releases": 32
+          },
+          "4": {
+            "episodes": 32,
+            "points": 66,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "5": {
+            "episodes": 32,
+            "points": 75,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "6": {
+            "episodes": 32,
+            "points": 12,
+            "blocks": 28,
+            "steals": 0,
+            "releases": 32
+          },
+          "7": {
+            "episodes": 32,
+            "points": 18,
+            "blocks": 24,
+            "steals": 0,
+            "releases": 32
+          }
+        }
+      },
+      {
+        "name": "Learned defense — imitation",
+        "file": "artifacts/2019-learned-defense/candidate-imitation.json",
+        "episodes": 256,
+        "points": 464,
+        "makes": 156,
+        "threes": 152,
+        "blocks": 26,
+        "steals": 17,
+        "recoveries": 0,
+        "releases": 239,
+        "jumps": 379,
+        "dashes": 110,
+        "closeoutError": 56.246700134344444,
+        "reward": -4.878118400268688,
+        "timeouts": 0,
+        "byArchetype": {
+          "0": {
+            "episodes": 32,
+            "points": 63,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "1": {
+            "episodes": 32,
+            "points": 72,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "2": {
+            "episodes": 32,
+            "points": 72,
+            "blocks": 1,
+            "steals": 0,
+            "releases": 32
+          },
+          "3": {
+            "episodes": 32,
+            "points": 30,
+            "blocks": 16,
+            "steals": 0,
+            "releases": 32
+          },
+          "4": {
+            "episodes": 32,
+            "points": 66,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "5": {
+            "episodes": 32,
+            "points": 75,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "6": {
+            "episodes": 32,
+            "points": 36,
+            "blocks": 0,
+            "steals": 17,
+            "releases": 15
+          },
+          "7": {
+            "episodes": 32,
+            "points": 50,
+            "blocks": 9,
+            "steals": 0,
+            "releases": 32
+          }
+        }
+      },
+      {
+        "name": "Learned defense — scratch",
+        "file": "artifacts/2019-learned-defense/candidate-scratch.json",
+        "episodes": 256,
+        "points": 521,
+        "makes": 175,
+        "threes": 171,
+        "blocks": 0,
+        "steals": 12,
+        "recoveries": 1,
+        "releases": 244,
+        "jumps": 32,
+        "dashes": 0,
+        "closeoutError": 70.95664177662063,
+        "reward": -6.055975783553238,
+        "timeouts": 0,
+        "byArchetype": {
+          "0": {
+            "episodes": 32,
+            "points": 63,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "1": {
+            "episodes": 32,
+            "points": 72,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "2": {
+            "episodes": 32,
+            "points": 66,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "3": {
+            "episodes": 32,
+            "points": 63,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "4": {
+            "episodes": 32,
+            "points": 66,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "5": {
+            "episodes": 32,
+            "points": 75,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "6": {
+            "episodes": 32,
+            "points": 39,
+            "blocks": 0,
+            "steals": 12,
+            "releases": 20
+          },
+          "7": {
+            "episodes": 32,
+            "points": 77,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          }
+        }
+      },
+      {
+        "name": "Extreme — learned defensive corrections",
+        "file": "artifacts/2019-residual-defense/candidate.json",
+        "episodes": 256,
+        "points": 231,
+        "makes": 77,
+        "threes": 77,
+        "blocks": 150,
+        "steals": 0,
+        "recoveries": 1,
+        "releases": 256,
+        "jumps": 256,
+        "dashes": 0,
+        "closeoutError": 57.6175053578463,
+        "reward": -0.4746100107156927,
+        "timeouts": 0,
+        "byArchetype": {
+          "0": {
+            "episodes": 32,
+            "points": 57,
+            "blocks": 6,
+            "steals": 0,
+            "releases": 32
+          },
+          "1": {
+            "episodes": 32,
+            "points": 3,
+            "blocks": 31,
+            "steals": 0,
+            "releases": 32
+          },
+          "2": {
+            "episodes": 32,
+            "points": 0,
+            "blocks": 32,
+            "steals": 0,
+            "releases": 32
+          },
+          "3": {
+            "episodes": 32,
+            "points": 12,
+            "blocks": 23,
+            "steals": 0,
+            "releases": 32
+          },
+          "4": {
+            "episodes": 32,
+            "points": 57,
+            "blocks": 5,
+            "steals": 0,
+            "releases": 32
+          },
+          "5": {
+            "episodes": 32,
+            "points": 75,
+            "blocks": 0,
+            "steals": 0,
+            "releases": 32
+          },
+          "6": {
+            "episodes": 32,
+            "points": 0,
+            "blocks": 32,
+            "steals": 0,
+            "releases": 32
+          },
+          "7": {
+            "episodes": 32,
+            "points": 27,
+            "blocks": 21,
+            "steals": 0,
+            "releases": 32
+          }
+        }
+      }
+    ]
+  },
+  "completeMatches": {
+    "auditedAt": "2026-11-13T13:19:56.752Z",
+    "candidate": "artifacts/2019-residual-defense/candidate.json",
+    "baseline": "profiles/hard.json",
+    "seed": 131126800,
+    "pairs": 12,
+    "duration": 60,
+    "matches": 24,
+    "completed": 24,
+    "capped": 0,
+    "meanDifferential": 0.7083333333333334,
+    "winRate": 0.5416666666666666,
+    "drawRate": 0,
+    "lossRate": 0.4583333333333333,
+    "candidateStats": {
+      "shots": 100,
+      "threeAttempts": 77,
+      "threeMakes": 53,
+      "blocks": 0,
+      "shotsBlocked": 0,
+      "dispossessions": 3,
+      "ultimateUses": 26,
+      "earlyUltimates": 0
+    },
+    "hardStats": {
+      "shots": 104,
+      "threeAttempts": 70,
+      "threeMakes": 48,
+      "blocks": 0,
+      "shotsBlocked": 0,
+      "dispossessions": 9,
+      "ultimateUses": 24,
+      "earlyUltimates": 0
+    },
+    "cooldownsEqual": true,
+    "passed": true,
+    "scores": [
+      {
+        "candidateScore": 15,
+        "hardScore": 8,
+        "differential": 7
+      },
+      {
+        "candidateScore": 8,
+        "hardScore": 10,
+        "differential": -2
+      },
+      {
+        "candidateScore": 10,
+        "hardScore": 9,
+        "differential": 1
+      },
+      {
+        "candidateScore": 9,
+        "hardScore": 10,
+        "differential": -1
+      },
+      {
+        "candidateScore": 9,
+        "hardScore": 11,
+        "differential": -2
+      },
+      {
+        "candidateScore": 11,
+        "hardScore": 10,
+        "differential": 1
+      },
+      {
+        "candidateScore": 10,
+        "hardScore": 7,
+        "differential": 3
+      },
+      {
+        "candidateScore": 11,
+        "hardScore": 13,
+        "differential": -2
+      },
+      {
+        "candidateScore": 5,
+        "hardScore": 10,
+        "differential": -5
+      },
+      {
+        "candidateScore": 9,
+        "hardScore": 11,
+        "differential": -2
+      },
+      {
+        "candidateScore": 10,
+        "hardScore": 8,
+        "differential": 2
+      },
+      {
+        "candidateScore": 11,
+        "hardScore": 12,
+        "differential": -1
+      },
+      {
+        "candidateScore": 14,
+        "hardScore": 9,
+        "differential": 5
+      },
+      {
+        "candidateScore": 10,
+        "hardScore": 8,
+        "differential": 2
+      },
+      {
+        "candidateScore": 12,
+        "hardScore": 13,
+        "differential": -1
+      },
+      {
+        "candidateScore": 13,
+        "hardScore": 11,
+        "differential": 2
+      },
+      {
+        "candidateScore": 7,
+        "hardScore": 10,
+        "differential": -3
+      },
+      {
+        "candidateScore": 13,
+        "hardScore": 8,
+        "differential": 5
+      },
+      {
+        "candidateScore": 5,
+        "hardScore": 6,
+        "differential": -1
+      },
+      {
+        "candidateScore": 11,
+        "hardScore": 7,
+        "differential": 4
+      },
+      {
+        "candidateScore": 12,
+        "hardScore": 10,
+        "differential": 2
+      },
+      {
+        "candidateScore": 12,
+        "hardScore": 13,
+        "differential": -1
+      },
+      {
+        "candidateScore": 13,
+        "hardScore": 10,
+        "differential": 3
+      },
+      {
+        "candidateScore": 13,
+        "hardScore": 12,
+        "differential": 1
+      }
+    ]
+  },
+  "fairness": {
+    "ultimateCooldownSeconds": 18,
+    "equalForBothPlayers": true,
+    "shotAndMovementPhysicsUnchanged": true,
+    "humanTimingUnchanged": true,
+    "drillUltimatesDisabledEqually": true,
+    "policyObservesOpponentKeys": false
+  },
+  "limitations": [
+    "Scripted attacks are broader than the previous drill, but do not cover every human strategy.",
+    "Fast retreat-dash shots and some direction changes still escape the defense.",
+    "This is learned defensive refinement, not end-to-end learning of the entire game.",
+    "Full-match results are a finite sample, not a guarantee of beating a human."
+  ]
+}

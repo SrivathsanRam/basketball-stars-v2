@@ -1,0 +1,29 @@
+{
+  "default": "hard",
+  "levels": [
+    {
+      "id": "easy",
+      "label": "Easy",
+      "description": "The original 2019 opponent.",
+      "nativeSkill": 3
+    },
+    {
+      "id": "medium",
+      "label": "Medium",
+      "description": "An evolved opponent with jump-shot threes.",
+      "profile": "profiles/medium.json"
+    },
+    {
+      "id": "hard",
+      "label": "Hard",
+      "description": "Smart contests, shot fakes and close defense.",
+      "profile": "profiles/hard.json"
+    },
+    {
+      "id": "extreme",
+      "label": "Extreme",
+      "description": "Tighter contests and tougher three-point defense.",
+      "profile": "profiles/extreme.json"
+    }
+  ]
+}

@@ -1,64 +1,96 @@
-# Basketball Stars — Evolved Opponent
+# Basketball Stars 2019
 
-[Play the evolved bot](https://srivathsanram.github.io/basketball-stars-v2/)
+[Play Basketball Stars 2019](https://srivathsanram.github.io/basketball-stars-v2/)
 
-This release contains one selected evolved opponent for Basketball Stars 2019.
-Click **Play** to start against it immediately. The stock difficulty-selection
-menu is hidden; the same evolved profile is loaded on every restart.
+The title screen uses the original game's logo, player artwork and font.
+Choose a difficulty, then press **Play**. Hard is selected by default.
 
-You control the player on the left. Use the arrow keys or WASD to move and jump,
-X to shoot or steal, and Z for the special move. Double-tap left/right to dash.
+| Difficulty | Opponent |
+| --- | --- |
+| Easy | Original 2019 standard single-match AI (native skill 3) |
+| Medium | Previous evolved bot, with calibrated jump-shot threes (v6) |
+| Hard | Preserved smart-contest and shot-fake bot (v7) |
+| Extreme | Hard's offense with learned defensive corrections (v8) |
 
-The opponent combines evolved skill parameters with a tactical controller for
-close defence, steals, jump contests, pressure dashes, rebounds and dunks. For a
-planned three it sets up near the arc, takes off outside the line, jumps forward,
-brakes and releases high enough to avoid the game's low-release accuracy penalty.
-Short step-backs are limited to 18 pixels and never use a backward dash. Shot
-physics, random dispersion and the game's three-point scoring rules are unchanged.
+The difficulty manifest is `site/2019/difficulties.json`. Frozen model files live
+in `site/2019/profiles/`. Hard and Medium retain their previous parameters and
+tactics. `evolved-profile.json` remains a compatibility copy of Hard; the menu
+loads the explicit difficulty profiles.
 
-The current version leads visible forward movement to contest jump shots, keeps
-the jump available instead of wasting distant steal animations, and checks the
-defender's blocking lane before a release. Against a close guard it can pump fake,
-change direction in short bursts, wait for the defender to commit, or drive
-instead of forcing a covered three. These decisions use positions and visible
-motion, not the human player's key presses.
+You control the player on the left. Arrow keys or WASD move and jump, X shoots
+or steals, Z uses the special move, and a double-tap left/right dashes.
+Both players have an **18-second ultimate recharge on every difficulty**.
+The runtime applies this common rule to the original AI as well as evolved bots.
+Movement speed, jumping, collisions, shot physics and normal human match timing
+remain those of the original game.
 
-At full time a persistent final-score card shows both scores and the winner.
-**Play again** starts a new match against the same selected evolved opponent.
+At full time a persistent score card displays both scores and the winner.
+**Play again** retains the chosen difficulty; **Choose difficulty** returns to
+the title screen. The in-match **Menu** button also returns to the title screen.
 
-Both players have the same **18-second ultimate recharge**. Cooldown is enforced
-as a shared match rule and cannot be reduced by an evolved bot profile. The
-previous bot's 12-second cooldown advantage has been removed.
+## Learning experiment
 
-The selected model lives in `site/2019/evolved-profile.json`. Its saved evaluation
-and `site/2019/release-audit.json` record the match evidence used for selection.
-Three variants were screened on 30-second games, then the leader played 24 fresh,
-completed 40-second games with court sides swapped. It won 23 and lost 1,
-averaging +3.042 points against the previous release. It recorded 7 blocks, had
-zero shots blocked, and was dispossessed 2 times versus 46 for the previous bot.
-Both used the same 18-second ultimate recharge; no early activation was recorded.
+The new experiments optimize observation-to-action policy weights through
+cross-entropy evolution using rewards from the actual game engine. This is
+evolutionary policy search, not PPO. It evaluates starting from random weights,
+initializing from demonstrations of Hard, and learning corrections to Hard.
+Movement, jumping, stealing and dashing are policy outputs. Offense and rebounds
+remain inherited from Hard, so this is a hybrid learned defender, not a complete
+bot learned from scratch.
 
-In a separate 36-possession scripted reactive-blocker drill, the selected version
-had zero shots blocked versus 12 for the previous release. The controlled jumper
-drills and bot matches are repeatable test scenarios, not guarantees against all
-human play. The evaluator advances the engine and animations together and rejects
-capped final-audit games; normal human play retains the original timing.
-The training method is an evolution strategy over the game's parameters and
-tactical decisions, rather than a neural RL network.
+Training uses visible positions, velocities and player/ball state. The policy
+cannot inspect human key presses or future random shots. The varied possession
+tests include wide closeouts, trailing defenders, retreating shots, retreat
+dashes, forward jumps, pump fakes and direction changes, on both court sides.
+Separate seeds are used for training, candidate selection and final tests.
+The isolated defense drills disable both ultimates equally. Complete-game tests
+retain the shared 18-second recharge and reject truncated matches.
 
-Only the selected profile and the runtime needed to play it are published here.
-Earlier profiles and the separate original-game project remain in the local
-training workspace.
+A difficulty is promoted to Extreme only after stronger defense and a positive
+full-game comparison against Hard have been verified. Scripted drills and bot
+matches are measurements, not a guarantee of beating every human strategy.
+
+Extreme's residual policy trained on **57,600 possessions**. In 256 fresh
+scripted possessions, it allowed **24 made threes versus Hard's 63**, and recorded
+**180 blocks versus 124**. In a separate 256-possession fast-release stress test,
+made threes fell from **97 to 77**. These counts use starting possessions as the
+denominator, including possessions ending in steals or blocks.
+
+Each learning approach received 57,600 evolutionary training possessions.
+The frozen candidates were then compared on new seeds, with a fresh game world
+per policy. Lower numbers below mean fewer made threes allowed:
+
+| Defender | Varied attacks (256 possessions) | Fast releases (256 possessions) |
+| --- | ---: | ---: |
+| Hard | 63 | 97 |
+| Learned from random initialization | 70 | 171 |
+| Learned from imitation of Hard | 58 | 152 |
+| Learned corrections to Hard (Extreme) | 24 | 77 |
+
+Within this experiment, replacing the whole defender with a learned policy did
+not generalize well to quick shots. Learning corrections preserved useful block
+timing while improving it. This does not establish a limit on larger neural RL
+models or longer, broader training. The comparison concerns these compact
+evolutionary policies and this fixed training budget.
+
+The selected candidate won **13 of 24 completed 60-second games** against Hard,
+averaging **+0.708 points**, with court sides swapped and fresh random seeds.
+That is a modest overall advantage; the more substantial gain is in the
+three-point drills. Neither player used an ultimate before its 18-second charge.
+Fast retreat-dash shots and some direction changes can still escape the defense.
+The [machine-readable experiment report](site/2019/learning-audit.json) records
+the comparisons, conditions and limitations.
 
 ## Deployment
 
-GitHub Actions publishes the static `site/` directory to GitHub Pages whenever
-`main` changes. No server or installation is needed to play. Relative asset paths
-support the `/basketball-stars-v2/` project URL.
+GitHub Actions publishes the static `site/` directory to GitHub Pages on pushes
+to `main`. No server or installation is needed to play. Relative asset paths
+support the `/basketball-stars-v2/` project URL, and content hashes refresh
+updated scripts and styles.
 
 ## Credits
 
 The underlying game engine, artwork, animations and audio are by MadPuffers,
 from the Basketball Stars 2019 build served by CrazyGames. This repository adds
-the evolved profile, tactical overlay and standalone play wrapper. Original
-game assets retain their original ownership.
+the evolved profiles, learned policy runtime, tactical overlay and play wrapper.
+Original game assets retain their original ownership.

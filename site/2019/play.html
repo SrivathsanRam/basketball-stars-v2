@@ -2,38 +2,49 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no">
-    <title>Play the evolved Basketball Stars 2019 bot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Basketball Stars 2019 — Play</title>
     <link rel="stylesheet" href="../vendor-2019/assets/css/app.css?v=ad8abcc6a736">
-    <link rel="stylesheet" href="../trainer.css?v=9d4cfca1bbfe">
-    <style>
-      #content { visibility: hidden; }
-      body.evolved-match #content { visibility: visible; }
-      #play-panel { width: 220px; }
-    </style>
+    <link rel="stylesheet" href="./play.css?v=775a09248cf9">
   </head>
   <body>
     <div id="content"></div>
-    <div id="loader">Loading evolved 2019 opponent…</div>
-    <aside id="play-panel">
-      <strong>Basketball Stars · Evolved</strong>
-      <span id="profile-name">Loading profile…</span>
-      <button id="play-evolved" disabled>Play</button>
-      <small>You control the player on the left.</small>
-      <small>Ultimate recharge: 18 seconds for both players.</small>
-      <small>Arrows / WASD move &amp; jump · X shoot/steal · Z special. Double-tap left/right to dash.</small>
-    </aside>
+    <div id="loader">Loading Basketball Stars 2019…</div>
+    <main id="start-screen" aria-label="Basketball Stars 2019 main menu">
+      <div class="menu-art" aria-hidden="true"></div>
+      <header class="menu-heading">
+        <img class="game-logo" src="../vendor-2019/assets/images/logo.png" alt="Basketball Stars" width="360" height="186">
+        <p class="edition">2019 <span>★</span> ONE PLAYER</p>
+      </header>
+      <section class="menu-card" aria-label="Choose your opponent">
+        <h1>CHOOSE YOUR CHALLENGE</h1>
+        <fieldset id="difficulty-options"><legend>Difficulty</legend></fieldset>
+        <p id="profile-name" aria-live="polite">Getting the court ready…</p>
+        <button id="play-evolved" class="arcade-button" disabled>PLAY <span aria-hidden="true">▶</span></button>
+        <p class="fair-play">Equal 18-second ultimates. Every difficulty.</p>
+      </section>
+      <footer class="menu-controls">
+        <p><span>MOVE &amp; JUMP</span> <kbd>W A S D</kbd> / <kbd>↑ ← ↓ →</kbd> <b>·</b> <span>SHOOT / STEAL</span> <kbd>X</kbd> <b>·</b> <span>SPECIAL</span> <kbd>Z</kbd></p>
+        <p>You play on the left. Double-tap left or right to dash.</p>
+      </footer>
+      <p id="menu-error" role="alert" hidden></p>
+    </main>
+    <nav id="match-toolbar" aria-label="Match menu">
+      <button id="return-menu" class="small-button">MENU</button>
+      <span id="active-difficulty">HARD</span>
+    </nav>
     <section id="match-result" role="dialog" aria-modal="true" aria-labelledby="result-title" hidden>
       <div class="result-card">
-        <p class="result-caption">FINAL SCORE</p>
+        <p class="result-caption">FINAL SCORE <span id="result-difficulty">HARD</span></p>
         <h1 id="result-title">Full time</h1>
         <div class="result-scoreboard">
           <div><span>You</span><strong id="result-you">0</strong></div>
           <span class="result-separator">–</span>
-          <div><span>Evolved bot</span><strong id="result-bot">0</strong></div>
+          <div><span id="result-opponent">Hard bot</span><strong id="result-bot">0</strong></div>
         </div>
-        <button id="play-again">Play again</button>
-        <p>Same evolved opponent · Equal 18-second ultimates</p>
+        <button id="play-again" class="arcade-button">PLAY AGAIN <span aria-hidden="true">▶</span></button>
+        <button id="result-menu" class="small-button">CHOOSE DIFFICULTY</button>
+        <p>Equal 18-second ultimates</p>
       </div>
     </section>
     <div id="trainer-status" role="status">Initializing 2019 engine…</div>
@@ -47,7 +58,9 @@
     <script src="../vendor-2019/basketball_legends_2019.patched.min.js?v=e588047ce821"></script>
     <script src="./duel-policy.js?v=b08a9d598844"></script>
     <script src="./shot-policy.js?v=5e4bc4f6e418"></script>
-    <script src="./training-bridge.js?v=5a29168d0172"></script>
-    <script src="./play.js?v=adf89e7ef607"></script>
+    <script src="./learned-defense.js?v=bd4539350259"></script>
+    <script src="./residual-defense.js?v=d54dcf219921"></script>
+    <script src="./training-bridge.js?v=b34d844a47c3"></script>
+    <script src="./play.js?v=9892dc6b06aa"></script>
   </body>
 </html>
