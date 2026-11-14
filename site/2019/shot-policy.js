@@ -102,7 +102,8 @@
         return false;
       }
       const travel = tactics.threeShotMode === 2 ? Math.max(0, Math.min(60, tactics.threeForwardTravel)) : 0;
-      const target = Math.max(arc - 20, plan.takeoff - travel);
+      const allowance = Math.max(20, Math.min(60, Number(tactics.forwardReleaseAllowance) || 20));
+      const target = Math.max(arc - allowance, plan.takeoff - travel);
       if (distance > target + 2 && travel > 0) {
         controller.currentMove = -side;
       } else {

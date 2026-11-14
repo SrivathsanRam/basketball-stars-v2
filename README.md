@@ -11,9 +11,10 @@ Hard remains selected by default.
 | Medium | Preserved evolved jump-shot opponent (v6) |
 | Hard | Preserved smart-contest and shot-fake opponent (v7) |
 | Extreme | Hard-descended opponent improved through genetic self-play (v9) |
+| Impossible | Human-style challenge with contextual shooting and defensive controls (v10) |
 
 The manifest is `site/2019/difficulties.json`; models are in
-`site/2019/profiles/`. Hard and Medium remain byte-for-byte unchanged.
+`site/2019/profiles/`. Hard, Medium and Extreme remain byte-for-byte unchanged.
 `evolved-profile.json` remains a compatibility copy of Hard.
 
 You control the left player. Arrow keys or WASD move and jump, X shoots or
@@ -24,6 +25,49 @@ Original movement, jumping, collision and shot physics remain unchanged.
 The final score and winner remain visible after a match. **Play again** keeps
 the selected difficulty; **Choose difficulty** and the in-match **Menu** button
 return to the title screen.
+
+## Impossible (v10)
+
+Impossible is intended as the tougher opponent for human play. It combines a
+genetically evolved checkpoint with contextual controls for forward-jump
+threes, high close-range jump shots, genuine takeoff contests, exposed steals,
+dashes and adaptive pump fakes. Both players retain normal physics and the
+same 18-second ultimate recharge.
+
+The search completed eight new generations and 896 full training games from
+the preserved Extreme ancestor. Generation 5 was selected. The shooting and
+action safeguards were added after training and tested as part of the complete
+controller; this is a hybrid, not a policy learned from scratch. Supporting
+source reviews used Qwen3 Coder Next through the user's SoCLaaS gateway.
+
+| Final check | Wins / games | Mean score difference |
+| --- | ---: | ---: |
+| Impossible vs independent human-style attacks | 47 / 48 | +10.35 |
+| Existing Extreme vs those same attacks | 18 / 48 | -1.42 |
+| Impossible vs Hard | 23 / 24 | +6.25 |
+| Impossible vs existing Extreme | 2 / 16 | -4.44 |
+| Normal-speed Impossible vs human-style attacks | 16 / 16 | +9.88 |
+| Normal-speed existing Extreme vs those attacks | 10 / 16 | +0.75 |
+
+The four synthetic styles use quick jumpers, pump fakes, retreating threes and
+drives. Every final cohort swaps sides and uses fresh seeds. These are scripted
+test opponents, not human participants. The paired mean-margin improvement
+against the scripts passed the declared lower-bound check. Impossible still
+loses the direct matchup against Extreme more often: the release improves the
+tested human-play matchup, rather than dominating every bot strategy.
+
+Open-shot diagnostics recorded 103 made threes in 120 attempts and
+60/60 close-range possessions ending in a score. Possession outcomes can
+include recoveries. Original dispersion remains, so this is not perfect accuracy
+or an unbeatable opponent. Defense-only drills did not show universal block
+improvement.
+
+All 68 code checks passed. The five-difficulty menu, rematches, persistent final
+score and equal ultimate recharge are also verified in the built site. The
+[Impossible audit](site/2019/impossible-audit.json) includes raw matches,
+checksums, diagnostics, the synthetic opponent source and rejected-attempt
+summaries. An earlier run was rejected for incomplete games; another failed
+its Hard thresholds. The final release uses a separate untouched seed set.
 
 ## How Extreme learned
 

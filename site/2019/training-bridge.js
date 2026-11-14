@@ -7,6 +7,7 @@
   const activeTacticsBySide = new Map();
   const activeLearnedDefenseBySide = new Map();
   const activeLearnedPolicyBySide = new Map();
+  const activeImpossibleBySide = new Map();
   let matchMechanics = {};
   let simulationRate = 1;
   let simulationAccumulator = 0;
@@ -123,7 +124,7 @@
           ([, value]) => Number.isFinite(Number(value))
         ))
         : null;
-      return { parameters: agent.parameters, tactics, learnedDefense: agent.learnedDefense || null, learnedPolicy: agent.learnedPolicy || null };
+      return { parameters: agent.parameters, tactics, learnedDefense: agent.learnedDefense || null, learnedPolicy: agent.learnedPolicy || null, impossiblePolicy: agent.impossiblePolicy || null };
     }
     return { parameters: agent, tactics: null };
   }
@@ -295,6 +296,20 @@
       const tactics = activeTacticsBySide.get(this.SIDE);
       if (tactics) this.chanceForThree = tactics.threePointChance;
       originalUpdate.call(this, delta);
+      const impossible = activeImpossibleBySide.get(this.SIDE);
+      if (impossible) {
+        this.__decisionStats = matchMechanics[this.SIDE];
+        const rewindDefense = !this.player.withBall && [1,4].includes(impossible.parameters?.defenseMode);
+        const previousDefense = this.__duelDefense ? { ...this.__duelDefense } : null;
+        const previousJumps = this.__decisionStats?.defensiveJumps || 0;
+        if (tactics && impossible.parameters?.offenseMode !== 1) {
+          this.__tacticalDelta = delta; applyTacticalPolicy(this, tactics);
+          const residual=activeLearnedPolicyBySide.get(this.SIDE);
+          if(residual&&impossible.parameters?.offenseMode>=2)window.__BS2019_SELFPLAY__?.update(this,delta,residual);
+        }
+        if(rewindDefense){this.__duelDefense=previousDefense;if(this.__decisionStats)this.__decisionStats.defensiveJumps=previousJumps;}
+        window.__BS2019_IMPOSSIBLE__?.update(this, delta, impossible); return;
+      }
       if (tactics) {
         this.__tacticalDelta = delta;
         applyTacticalPolicy(this, tactics);
@@ -355,6 +370,26 @@
       return originalThrow.call(this);
     };
     const originalSuper = engine.PlayerObject.prototype.startSuper;
+    const originalDash = engine.PlayerObject.prototype.makeDash;
+    engine.PlayerObject.prototype.makeDash = function measuredDash(direction) {
+      const starts = direction && this.readyForDash && this.isGrounded;
+      const value = originalDash.call(this,direction);
+      if(starts&&this.state==='dash'&&matchMechanics[this.SIDE])matchMechanics[this.SIDE].actualDashes+=1;
+      return value;
+    };
+    const originalSteal = engine.PlayerObject.prototype.makeSteal;
+    engine.PlayerObject.prototype.makeSteal = function measuredSteal() {
+      const value=originalSteal.call(this);
+      if(this.state==='steal'&&matchMechanics[this.SIDE])matchMechanics[this.SIDE].actualStealAttempts+=1;
+      return value;
+    };
+    const originalPump = engine.PlayerObject.prototype.makeBlockOrPump;
+    engine.PlayerObject.prototype.makeBlockOrPump = function measuredPump(value) {
+      const starts=value&&this.isGrounded&&this.withBall;
+      const result=originalPump.call(this,value);
+      if(starts&&/pump/i.test(this.state)&&matchMechanics[this.SIDE])matchMechanics[this.SIDE].actualPumpFakes+=1;
+      return result;
+    };
     engine.PlayerObject.prototype.startSuper = function measuredSuper() {
       const stats = matchMechanics[this.SIDE];
       if (stats) {
@@ -460,9 +495,11 @@
     activeTacticsBySide.clear();
     activeLearnedDefenseBySide.clear();
     activeLearnedPolicyBySide.clear();
+    activeImpossibleBySide.clear();
     matchMechanics = Object.fromEntries([-1, 1].map((side) => [side, {
       shots: 0, threeAttempts: 0, threeMakes: 0, threeReleases: [], ultimateUses: 0, ultimateCharges: [],
-      blocks: 0, shotsBlocked: 0, dispossessions: 0, contestDeferrals: 0, pumpFakes: 0, jitterChanges: 0, defensiveJumps: 0
+      blocks: 0, shotsBlocked: 0, dispossessions: 0, contestDeferrals: 0, pumpFakes: 0, jitterChanges: 0, defensiveJumps: 0,
+      actualDashes:0,actualStealAttempts:0,actualPumpFakes:0
     }]));
     const candidateControllerSide = candidateSide === 0 ? -1 : 1;
     if (candidateAgent.tactics && nativeCandidateSkill === null) activeTacticsBySide.set(candidateControllerSide, candidateAgent.tactics);
@@ -471,6 +508,8 @@
     if (opponentAgent.learnedDefense) activeLearnedDefenseBySide.set(-candidateControllerSide, opponentAgent.learnedDefense);
     if (candidateAgent.learnedPolicy && nativeCandidateSkill === null) activeLearnedPolicyBySide.set(candidateControllerSide, candidateAgent.learnedPolicy);
     if (opponentAgent.learnedPolicy) activeLearnedPolicyBySide.set(-candidateControllerSide, opponentAgent.learnedPolicy);
+    if (candidateAgent.impossiblePolicy && nativeCandidateSkill === null) activeImpossibleBySide.set(candidateControllerSide, candidateAgent.impossiblePolicy);
+    if (opponentAgent.impossiblePolicy) activeImpossibleBySide.set(-candidateControllerSide, opponentAgent.impossiblePolicy);
 
     const inventory = engine.Inventory.instance;
     const match = inventory.matchData;
@@ -523,7 +562,8 @@
           side,
           tactical: activeTacticsBySide.has(side),
           learnedDefense: activeLearnedDefenseBySide.get(side)?.schema || null,
-          learnedPolicy: activeLearnedPolicyBySide.get(side)?.schema || null
+          learnedPolicy: activeLearnedPolicyBySide.get(side)?.schema || null,
+          impossiblePolicy: activeImpossibleBySide.get(side)?.schema || null
         })),
         cooldowns: [...core.playersLeft, ...core.playersRight].map((player) => ({
           side: player.SIDE, isHuman: player.isHuman, seconds: player.energyBar.fullTime,
